@@ -1,0 +1,13 @@
+# Mac files
+.DS_Store
+
+# Eclipse files
+.project
+
+# Temporary directory
+tmp/
+
+# Certs
+
+*-certs
+jwt_*
