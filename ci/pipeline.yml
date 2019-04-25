@@ -1,0 +1,26 @@
+---
+jobs:
+- name: update-logstash-image
+  serial: true
+  plan:
+  - get: logstash-image-src
+    trigger: true
+  - put: docker-image-repo
+    params:
+      build: logstash-image-src/docker
+
+resources:
+- name: logstash-image-src
+  type: git
+  source:
+    uri: {{logstash-image-git-url}}
+    branch: {{logstash-image-git-branch}}
+
+- name: docker-image-repo
+  type: docker-image
+  source:
+    email: {{docker-email}}
+    username: {{docker-username}}
+    password: {{docker-password}}
+    repository: {{docker-repository}}
+
