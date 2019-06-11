@@ -56,6 +56,7 @@ jobs:
             AWS_SECRET_ACCESS_KEY: {{staging-s3-logs-secret-access-key}}
             S3_REGION: {{cloud-gov-logs-region}}
             S3_BUCKET: {{staging-alb-logs-bucket}}
+            S3_PREFIX: staging
             ELASTICSEARCH_INDEX: {{staging-alb-logs-elasticsearch-index}}
             ELASTICSEARCH_HOSTS: {{staging-elasticsearch-hosts}}
       on_failure:
@@ -90,6 +91,7 @@ jobs:
             AWS_SECRET_ACCESS_KEY: {{production-s3-logs-secret-access-key}}
             S3_REGION: {{cloud-gov-logs-region}}
             S3_BUCKET: {{production-alb-logs-bucket}}
+            S3_PREFIX: production
             ELASTICSEARCH_INDEX: {{production-alb-logs-elasticsearch-index}}
             ELASTICSEARCH_HOSTS: {{production-elasticsearch-hosts}}
       on_failure:
