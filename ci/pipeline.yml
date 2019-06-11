@@ -1,0 +1,159 @@
+---
+jobs:
+  - name: update-logstash-image
+    serial: true
+    plan:
+      - get: logstash-image-src
+        trigger: true
+      - put: docker-image-repo
+        params:
+          build: logstash-image-src/docker
+  
+  - name: deploy-development
+    plan:
+      - get: logstash-image-src
+        passed: [update-logstash-image]
+        trigger: true
+      - put: cloud-gov-development
+        params:
+          manifest: cg-deploy-s3-logstash/manifest.yml
+          environment_variables:
+            AWS_ACCESS_KEY_ID: {{dev-s3-logs-access-key-id}}
+            AWS_SECRET_ACCESS_KEY: {{dev-s3-logs-secret-access-key}}
+            S3_REGION: {{cloud-gov-logs-region}}
+            S3_BUCKET: {{dev-alb-logs-bucket}}
+            ELASTICSEARCH_INDEX: {{dev-alb-logs-elasticsearch-index}}
+            ELASTICSEARCH_HOSTS: {{dev-elasticsearch-hosts}}
+      on_failure:
+        put: slack
+        params:
+          text: |
+            :x: FAILED to deploy cg-deploy-s3-logstash to development
+            <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+          channel: {{slack-channel}}
+          username: {{slack-username}}
+          icon_url: {{slack-icon-url}}
+      on_success:
+        put: slack
+        params:
+          text: |
+            :white_check_mark: Successfully deployed cg-deploy-s3-logstash to development
+            <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+          channel: {{slack-channel}}
+          username: {{slack-username}}
+          icon_url: {{slack-icon-url}}
+
+  - name: deploy-staging
+    plan:
+      - get: logstash-image-src
+        passed: [deploy-development]
+        trigger: true
+      - put: cloud-gov-staging
+        params:
+          manifest: cg-deploy-s3-logstash/manifest.yml
+          environment_variables:
+            AWS_ACCESS_KEY_ID: {{staging-s3-logs-access-key-id}}
+            AWS_SECRET_ACCESS_KEY: {{staging-s3-logs-secret-access-key}}
+            S3_REGION: {{cloud-gov-logs-region}}
+            S3_BUCKET: {{staging-alb-logs-bucket}}
+            S3_PREFIX: staging
+            ELASTICSEARCH_INDEX: {{staging-alb-logs-elasticsearch-index}}
+            ELASTICSEARCH_HOSTS: {{staging-elasticsearch-hosts}}
+      on_failure:
+        put: slack
+        params:
+          text: |
+            :x: FAILED to deploy cg-deploy-s3-logstash to staging
+            <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+          channel: {{slack-channel}}
+          username: {{slack-username}}
+          icon_url: {{slack-icon-url}}
+      on_success:
+        put: slack
+        params:
+          text: |
+            :white_check_mark: Successfully deployed cg-deploy-s3-logstash to staging
+            <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+          channel: {{slack-channel}}
+          username: {{slack-username}}
+          icon_url: {{slack-icon-url}}
+
+  - name: deploy-production
+    plan:
+      - get: logstash-image-src
+        passed: [deploy-staging]
+        trigger: true
+      - put: cloud-gov-production
+        params:
+          manifest: cg-deploy-s3-logstash/manifest.yml
+          environment_variables:
+            AWS_ACCESS_KEY_ID: {{production-s3-logs-access-key-id}}
+            AWS_SECRET_ACCESS_KEY: {{production-s3-logs-secret-access-key}}
+            S3_REGION: {{cloud-gov-logs-region}}
+            S3_BUCKET: {{production-alb-logs-bucket}}
+            S3_PREFIX: production
+            ELASTICSEARCH_INDEX: {{production-alb-logs-elasticsearch-index}}
+            ELASTICSEARCH_HOSTS: {{production-elasticsearch-hosts}}
+      on_failure:
+        put: slack
+        params:
+          text: |
+            :x: FAILED to deploy cg-deploy-s3-logstash to production
+            <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+          channel: {{slack-channel}}
+          username: {{slack-username}}
+          icon_url: {{slack-icon-url}}
+      on_success:
+        put: slack
+        params:
+          text: |
+            :white_check_mark: Successfully deployed cg-deploy-s3-logstash to production
+            <$ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME|View build details>
+          channel: {{slack-channel}}
+          username: {{slack-username}}
+          icon_url: {{slack-icon-url}}
+
+resources:
+  - name: cg-deploy-s3-logstash
+    type: git
+    source:
+      uri: {{logstash-image-git-url}}
+      branch: {{logstash-image-git-branch}}
+  
+  - name: docker-image-repo
+    type: docker-image
+    source:
+      email: {{docker-email}}
+      username: {{docker-username}}
+      password: {{docker-password}}
+      repository: {{docker-repository}}
+  
+  - name: cloud-gov-development
+    type: cf
+    source:
+      api: {{cf-api-url-development}}
+      username: {{cf-deploy-username-development}}
+      password: {{cf-deploy-password-development}}
+      organization: {{cf-organization}}
+      space: {{cf-space}}
+      skip_cert_check: false
+  
+  - name: cloud-gov-staging
+    type: cf
+    source:
+      api: {{cf-api-url-staging}}
+      username: {{cf-deploy-username-staging}}
+      password: {{cf-deploy-password-staging}}
+      organization: {{cf-organization}}
+      space: {{cf-space}}
+      skip_cert_check: false
+  
+  - name: cloud-gov-production
+    type: cf
+    source:
+      api: {{cf-api-url-production}}
+      username: {{cf-deploy-username-production}}
+      password: {{cf-deploy-password-production}}
+      organization: {{cf-organization}}
+      space: {{cf-space}}
+      skip_cert_check: false
