@@ -36,29 +36,29 @@ input_template = %q/
 input {
 <% if ENV['LOGSTASH_READ_FROM_FILE'] != nil %>
 <# for testing #>
-    file{
+    file {
         path => [ "<%= ENV['LOGSTASH_READ_FROM_FILE'] %>" ]
         mode => "read"
     }
 <% else %>
     s3 {
-<% STRING_INPUT_SETTINGS.each do |key, value| -%>
-<% if ENV[key] != nil -%>
+<% STRING_INPUT_SETTINGS.each do |key, value| %>
+<% if ENV[key] != nil %>
         <%= value %> => <%= ENV[key].inspect %>
-<% end -%>
-<% end -%>
-<% NUM_INPUT_SETTINGS.each do |key, value| -%>
-<% if ENV[key] != nil -%>
+<% end %>
+<% end %>
+<% NUM_INPUT_SETTINGS.each do |key, value| %>
+<% if ENV[key] != nil %>
         <%= value %> => <%= ENV[key] %>
-<% end -%>
-<% end -%>
-<% BOOLEAN_INPUT_SETTINGS.each do |key, value| -%>
-<% if ENV[key] != nil -%>
+<% end %>
+<% end %>
+<% BOOLEAN_INPUT_SETTINGS.each do |key, value| %>
+<% if ENV[key] != nil %>
         <%= value %> => <%= string_to_bool(ENV[key]).inspect %>
-<% end -%>
-<% end -%>
+<% end %>
+<% end %>
     }
-<% end -%>
+<% end %>
 }
 /
 
@@ -185,30 +185,30 @@ filter {
 
 output_template = %q/
 output {
-<% if ENV['LOGSTASH_STDOUT'] != nil -%>
-    stdout {}
-<% else -%>
+<% if ENV['LOGSTASH_STDOUT'] != nil %>
+    stdout { codec => json }
+<% else %>
     elasticsearch {
-        hosts =>  <%= ENV['ELASTICSEARCH_HOSTS'].split(',').inspect -%> 
+        hosts =>  <%= ENV['ELASTICSEARCH_HOSTS'].split(',').inspect %> 
         manage_template => false
-<% STRING_OUTPUT_SETTINGS.each do |key, value| -%>
-<% if ENV[key] != nil -%>
+<% STRING_OUTPUT_SETTINGS.each do |key, value| %>
+<% if ENV[key] != nil %>
         <%= value %> => <%= ENV[key].inspect %>
-<% end -%>
-<% end -%>
-<% NUM_OUTPUT_SETTINGS.each do |key, value| -%>
-<% if ENV[key] != nil -%>
+<% end %>
+<% end %>
+<% NUM_OUTPUT_SETTINGS.each do |key, value| %>
+<% if ENV[key] != nil %>
         <%= value %> => <%= ENV[key] %>
-<% end -%>
-<% end -%>
+<% end %>
+<% end %>
     
-<% BOOLEAN_OUTPUT_SETTINGS.each do |key, value| -%>
-<% if ENV[key] != nil -%>
+<% BOOLEAN_OUTPUT_SETTINGS.each do |key, value| %>
+<% if ENV[key] != nil %>
         <%= value %> => <%= string_to_bool(ENV[key]).inspect %>
-<% end -%>
-<% end -%>
+<% end %>
+<% end %>
     }
-<% end -%>
+<% end %>
 }
 /
 input_string = ERB.new(input_template, trim_mode: "-").result
