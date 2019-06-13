@@ -35,7 +35,7 @@ end
 input_template = %q/
 input {
 <% if ENV['LOGSTASH_READ_FROM_FILE'] != nil %>
-<# for testing #>
+<%# for testing %>
     file {
         path => [ "<%= ENV['LOGSTASH_READ_FROM_FILE'] %>" ]
         mode => "read"
@@ -128,7 +128,7 @@ filter {
     } else {
         dissect {
             mapping => {
-                "message" => '%{[@elb][timestamp]} %{[@elb][elb]} %{[@elb][client][ip]}:%{[@elb][client][port]} %{[elb_target_ip_port]} %{[@elb][request][processing_time]} %{[elb_target_processing_time]} %{[@elb][response][processing_time]} %{[@elb][elb][status_code]} %{[elb_target_status_code]} %{[@elb][received_bytes]} %{[@elb][sent_bytes]} "%{[@elb][request][verb]}" %{[@elb][request][url]} %{[@elb][request][protocol]}" "%{[@elb][request][user_agent]}" %{[@elb][ssl][cipher]} %{[@elb][ssl][protocol]}'
+                "message" => '%{[@elb][timestamp]} %{[@elb][elb][id]} %{[@elb][client][ip]}:%{[@elb][client][port]} %{[elb_target_ip_port]} %{[@elb][request][processing_time]} %{[elb_target_processing_time]} %{[@elb][response][processing_time]} %{[@elb][elb][status_code]} %{[elb_target_status_code]} %{[@elb][received_bytes]} %{[@elb][sent_bytes]} "%{[@elb][request][verb]} %{[@elb][request][url]} %{[@elb][request][protocol]}" "%{[@elb][request][user_agent]}" %{[@elb][ssl][cipher]} %{[@elb][ssl][protocol]}'
             }
             remove_tag => [ "_dissectfailure" ]
             id => "elb-dissect"
@@ -152,6 +152,7 @@ filter {
                         "elb_ssl_cipher" => "[@elb][ssl_cipher]"
                         "elb_ssl_protocol" => "[@elb][ssl_protocol]"
             }
+            remove_tag => [ "_dissectfailure" ]
         }
 
         dissect {
@@ -186,7 +187,13 @@ filter {
 output_template = %q/
 output {
 <% if ENV['LOGSTASH_STDOUT'] != nil %>
-    stdout { codec => json }
+    stdout {
+        codec => "json"
+    }
+<% elsif ENV['LOGSTASH_OUT_FILE'] != nil %>
+    file {
+        path => "<%= ENV['LOGSTASH_OUT_FILE'] %>"
+    }
 <% else %>
     elasticsearch {
         hosts =>  <%= ENV['ELASTICSEARCH_HOSTS'].split(',').inspect %> 

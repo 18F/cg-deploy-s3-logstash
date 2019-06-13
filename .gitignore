@@ -11,3 +11,7 @@ tmp/
 
 *-certs
 jwt_*
+
+# files created by running tests
+test/logs
+test/venv
