@@ -1,68 +1,70 @@
 #!/usr/bin/env ruby
-require "erb"
-STRING_INPUT_SETTINGS = { "S3_BACKUP_ADD_PREFIX" => "backup_add_prefix",
-                     "S3_BACKUP_TO_BUCKET" => "backup_to_bucket",
-                     "S3_BUCKET" => "bucket",
-                     "S3_EXCLUDE_PATTERN" => "exclude_pattern",
-                     "S3_PREFIX" => "prefix",
-                     "S3_PROXY_URI" => "proxy_uri",
-                     "S3_REGION" => "region",
-                     "S3_ROLE_ARN" => "role_arn",
-                     "S3_ROLE_SESSION_NAME" => "role_session_name",
-                     "S3_SINCEDB_PATH" => "sincedb_path",
-                     "S3_TEMPORARY_DIRECTORY" => "temporary_directory"
-            }
-NUM_INPUT_SETTINGS = { "S3_INTERVAL" => "interval" }
-BOOLEAN_INPUT_SETTINGS = { "S3_INCLUDE_OBJECT_PROPERTIES" => "include_object_properties",
-                      "S3_DELETE" => "delete",
-                      "S3_WATCH_FOR_NEW_FILES" => "watch_for_new_files"
-}
-STRING_OUTPUT_SETTINGS = {
-    "ELASTICSEARCH_INDEX" => "index",
-    "ELASTICSEARCH_DOCUMENT_ID" => "document_id",
-    "ELASTICSEARCH_ROUTING" => "routing"
-}
-NUM_OUTPUT_SETTINGS = {
-    "ELASTICSEARCH_IDLE_FLUSH_TIME" => "idle_flush_time"
-}
-BOOLEAN_OUTPUT_SETTINGS = {
+# frozen_string_literal: true
 
-}
-def string_to_bool (str)
-    return str == 'true' || str =~ /(true|t|yes|y|1)$/i
+require 'erb'
+STRING_INPUT_SETTINGS = {
+  'S3_BACKUP_ADD_PREFIX' => 'backup_add_prefix',
+  'S3_BACKUP_TO_BUCKET' => 'backup_to_bucket',
+  'S3_BUCKET' => 'bucket',
+  'S3_EXCLUDE_PATTERN' => 'exclude_pattern',
+  'S3_PREFIX' => 'prefix',
+  'S3_PROXY_URI' => 'proxy_uri',
+  'S3_REGION' => 'region',
+  'S3_ROLE_ARN' => 'role_arn',
+  'S3_ROLE_SESSION_NAME' => 'role_session_name',
+  'S3_SINCEDB_PATH' => 'sincedb_path',
+  'S3_TEMPORARY_DIRECTORY' => 'temporary_directory'
+}.freeze
+NUM_INPUT_SETTINGS = { 'S3_INTERVAL' => 'interval' }.freeze
+BOOLEAN_INPUT_SETTINGS = {
+  'S3_INCLUDE_OBJECT_PROPERTIES' => 'include_object_properties',
+  'S3_DELETE' => 'delete',
+  'S3_WATCH_FOR_NEW_FILES' => 'watch_for_new_files'
+}.freeze
+STRING_OUTPUT_SETTINGS = {
+  'ELASTICSEARCH_INDEX' => 'index',
+  'ELASTICSEARCH_DOCUMENT_ID' => 'document_id',
+  'ELASTICSEARCH_ROUTING' => 'routing'
+}.freeze
+NUM_OUTPUT_SETTINGS = {
+  'ELASTICSEARCH_IDLE_FLUSH_TIME' => 'idle_flush_time'
+}.freeze
+BOOLEAN_OUTPUT_SETTINGS = {}.freeze
+def string_to_bool(str)
+  str == 'true' || str =~ /(true|t|yes|y|1)$/i
 end
 
 input_template = %q/
 input {
 <% if ENV['LOGSTASH_READ_FROM_FILE'] != nil %>
-<# for testing #>
-    file{
+<%# for testing %>
+    file {
         path => [ "<%= ENV['LOGSTASH_READ_FROM_FILE'] %>" ]
         mode => "read"
     }
 <% else %>
     s3 {
-<% STRING_INPUT_SETTINGS.each do |key, value| -%>
-<% if ENV[key] != nil -%>
+<% STRING_INPUT_SETTINGS.each do |key, value| %>
+<% if ENV[key] != nil %>
         <%= value %> => <%= ENV[key].inspect %>
-<% end -%>
-<% end -%>
-<% NUM_INPUT_SETTINGS.each do |key, value| -%>
-<% if ENV[key] != nil -%>
+<% end %>
+<% end %>
+<% NUM_INPUT_SETTINGS.each do |key, value| %>
+<% if ENV[key] != nil %>
         <%= value %> => <%= ENV[key] %>
-<% end -%>
-<% end -%>
-<% BOOLEAN_INPUT_SETTINGS.each do |key, value| -%>
-<% if ENV[key] != nil -%>
+<% end %>
+<% end %>
+<% BOOLEAN_INPUT_SETTINGS.each do |key, value| %>
+<% if ENV[key] != nil %>
         <%= value %> => <%= string_to_bool(ENV[key]).inspect %>
-<% end -%>
-<% end -%>
+<% end %>
+<% end %>
     }
-<% end -%>
+<% end %>
 }
 /
 
-filter_string = %q/
+filter_string = %q(
 filter {
     # we have alb and elb logs in this bucket. Try ALB log format first, then ELB if that fails
     dissect {
@@ -128,7 +130,7 @@ filter {
     } else {
         dissect {
             mapping => {
-                "message" => '%{[@elb][timestamp]} %{[@elb][elb]} %{[@elb][client][ip]}:%{[@elb][client][port]} %{[elb_target_ip_port]} %{[@elb][request][processing_time]} %{[elb_target_processing_time]} %{[@elb][response][processing_time]} %{[@elb][elb][status_code]} %{[elb_target_status_code]} %{[@elb][received_bytes]} %{[@elb][sent_bytes]} "%{[@elb][request][verb]}" %{[@elb][request][url]} %{[@elb][request][protocol]}" "%{[@elb][request][user_agent]}" %{[@elb][ssl][cipher]} %{[@elb][ssl][protocol]}'
+                "message" => '%{[@elb][timestamp]} %{[@elb][elb][id]} %{[@elb][client][ip]}:%{[@elb][client][port]} %{[elb_target_ip_port]} %{[@elb][request][processing_time]} %{[elb_target_processing_time]} %{[@elb][response][processing_time]} %{[@elb][elb][status_code]} %{[elb_target_status_code]} %{[@elb][received_bytes]} %{[@elb][sent_bytes]} "%{[@elb][request][verb]} %{[@elb][request][url]} %{[@elb][request][protocol]}" "%{[@elb][request][user_agent]}" %{[@elb][ssl][cipher]} %{[@elb][ssl][protocol]}'
             }
             remove_tag => [ "_dissectfailure" ]
             id => "elb-dissect"
@@ -152,6 +154,7 @@ filter {
                         "elb_ssl_cipher" => "[@elb][ssl_cipher]"
                         "elb_ssl_protocol" => "[@elb][ssl_protocol]"
             }
+            remove_tag => [ "_dissectfailure" ]
         }
 
         dissect {
@@ -181,38 +184,44 @@ filter {
     }
 }
 
-/
+)
 
 output_template = %q/
 output {
-<% if ENV['LOGSTASH_STDOUT'] != nil -%>
-    stdout {}
-<% else -%>
-    elasticsearch {
-        hosts =>  <%= ENV['ELASTICSEARCH_HOSTS'].split(',').inspect -%> 
-        manage_template => false
-<% STRING_OUTPUT_SETTINGS.each do |key, value| -%>
-<% if ENV[key] != nil -%>
-        <%= value %> => <%= ENV[key].inspect %>
-<% end -%>
-<% end -%>
-<% NUM_OUTPUT_SETTINGS.each do |key, value| -%>
-<% if ENV[key] != nil -%>
-        <%= value %> => <%= ENV[key] %>
-<% end -%>
-<% end -%>
-    
-<% BOOLEAN_OUTPUT_SETTINGS.each do |key, value| -%>
-<% if ENV[key] != nil -%>
-        <%= value %> => <%= string_to_bool(ENV[key]).inspect %>
-<% end -%>
-<% end -%>
+<% if ENV['LOGSTASH_STDOUT'] != nil %>
+    stdout {
+        codec => "json"
     }
-<% end -%>
+<% elsif ENV['LOGSTASH_OUT_FILE'] != nil %>
+    file {
+        path => "<%= ENV['LOGSTASH_OUT_FILE'] %>"
+    }
+<% else %>
+    elasticsearch {
+        hosts =>  <%= ENV['ELASTICSEARCH_HOSTS'].split(',').inspect %>
+        manage_template => false
+<% STRING_OUTPUT_SETTINGS.each do |key, value| %>
+<% if ENV[key] != nil %>
+        <%= value %> => <%= ENV[key].inspect %>
+<% end %>
+<% end %>
+<% NUM_OUTPUT_SETTINGS.each do |key, value| %>
+<% if ENV[key] != nil %>
+        <%= value %> => <%= ENV[key] %>
+<% end %>
+<% end %>
+    
+<% BOOLEAN_OUTPUT_SETTINGS.each do |key, value| %>
+<% if ENV[key] != nil %>
+        <%= value %> => <%= string_to_bool(ENV[key]).inspect %>
+<% end %>
+<% end %>
+    }
+<% end %>
 }
 /
-input_string = ERB.new(input_template, trim_mode: "-").result
-output_string = ERB.new(output_template, trim_mode: "-").result
+input_string = ERB.new(input_template, trim_mode: '-').result
+output_string = ERB.new(output_template, trim_mode: '-').result
 puts input_string
 puts filter_string
 puts output_string

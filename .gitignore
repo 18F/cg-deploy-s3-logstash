@@ -11,3 +11,8 @@ tmp/
 
 *-certs
 jwt_*
+
+# files created by running tests
+test/venv
+venv
+test/__pycache__

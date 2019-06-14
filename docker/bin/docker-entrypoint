@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 if [[ ! -e /usr/share/logstash/pipeline/logstash.conf ]]; then
-	/usr/local/bin/make_logstash_pipeline.rb > /usr/share/logstash/pipeline/logstash.conf
+	/usr/local/bin/make_logstash_conf.rb > /usr/share/logstash/pipeline/logstash.conf
 fi
 
 export LS_JAVA_OPTS="-Dls.cgroup.cpuacct.path.override=/ -Dls.cgroup.cpu.path.override=/ $LS_JAVA_OPTS"

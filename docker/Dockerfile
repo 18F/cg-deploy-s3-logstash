@@ -1,4 +1,4 @@
-FROM logstash:7.0.0
+FROM logstash:7.1.1
 
 COPY bin /usr/local/bin
 COPY config /usr/share/logstash/config
