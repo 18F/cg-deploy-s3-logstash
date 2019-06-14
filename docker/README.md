@@ -85,4 +85,6 @@ Other settings directly map to Elasticsearch output plugin directives:
 | `ELASTICSEARCH_IDLE_FLUSH_TIME` | `idle_flush_time`               | integer       |
 |                                 |                                 |               |
 
-You can alternately set `LOGSTASH_STDOUT` to any value, and logstash will instead print logs to stdout
+You can alternately set `LOGSTASH_STDOUT` to any value, and logstash will instead print logs to stdout,
+or set `LOGSTASH_OUT_FILE` to a file, and logstash will output events as JSON, one per line, to the
+specified file.
