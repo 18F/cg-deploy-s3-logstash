@@ -1,6 +1,26 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
-DOCKER_IMAGE=${1:-18f/logstash-s3}
+help () {
+    cat <<EOF
+Test the logstash-s3 docker container. 
+Usage: logstash-s3 -h | CONTAINER
+
+-h        : show this help and exit
+CONTAINER : the name of the container to be tested,
+            Can be the string "build" to build and test container
+EOF
+}
+if [[ $# -ne 1 ]]; then
+    help
+    exit 1
+fi
+
+if  [[ "$1" =~ ^-{0,2}h(elp)?$ ]]; then
+    help
+    exit 0
+fi
+
+DOCKER_IMAGE=$1
 
 dir=$(dirname ${BASH_SOURCE[0]})
 pushd ${dir}
