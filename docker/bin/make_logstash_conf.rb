@@ -69,7 +69,7 @@ filter {
     # we have alb and elb logs in this bucket. Try ALB log format first, then ELB if that fails
     dissect {
         mapping => {
-           "message" => '%{[@alb][type]} %{[@alb][timestamp]} %{[@alb][alb][id]} %{[@alb][client][ip]}:%{[@alb][client][port]} %{alb_target_ip_port} %{[@alb][request][processing_time]} %{alb_target_processing_time} %{[@alb][response][processing_time]} %{[@alb][alb][status_code]} %{alb_target_status_code} %{[@alb][received_bytes]} %{[@alb][sent_bytes]} "%{[@alb][request][request]}" "%{[@alb][user_agent]}" %{alb_ssl_cipher} %{alb_ssl_protocol} %{alb_target_group_arn} "%{[@alb][trace_id]}" "%{[@alb][domain_name]}" "%{[@alb][chosen_cert_arn]}" %{[@alb][matched_rule_priority]} %{[@alb][request][creation_time]} "%{[@alb][actions_executed]}" "%{alb_redirect_url}" "%{alb_error_reason}"'
+           "message" => '%{[@alb][type]} %{[@alb][timestamp]} %{[@alb][alb][id]} %{[@alb][client][ip]}:%{[@alb][client][port]} %{alb_target_ip_port} %{[@alb][request][processing_time]} %{alb_target_processing_time} %{[@alb][response][processing_time]} %{[@alb][alb][status_code]} %{alb_target_status_code} %{[@alb][received_bytes]} %{[@alb][sent_bytes]} "%{[@alb][request][verb]} %{[@alb][request][url]} %{[@alb][request][protocol]}" "%{[@alb][user_agent]}" %{alb_ssl_cipher} %{alb_ssl_protocol} %{alb_target_group_arn} "%{[@alb][trace_id]}" "%{[@alb][domain_name]}" "%{[@alb][chosen_cert_arn]}" %{[@alb][matched_rule_priority]} %{[@alb][request][creation_time]} "%{[@alb][actions_executed]}" "%{alb_redirect_url}" "%{alb_error_reason}"'
         }
         id => "alb-dissect"
     }
@@ -101,7 +101,7 @@ filter {
                         "alb_ssl_cipher" => "[@alb][ssl_cipher]"
                         "alb_ssl_protocol" => "[@alb][ssl_protocol]"
             }
-            add_field => { "@message" => "%{[@alb][request][request]}" }
+            add_field => { "@message" => "%{[@alb][request][verb]} %{[@alb][request][url]} %{[@alb][request][protocol]}" }
         }
 
         dissect {
@@ -127,6 +127,7 @@ filter {
 
         date {
             match => [ "[@alb][timestamp]", "ISO8601"]
+            remove_field => [ "[@alb][timestamp]" ]
         }
     } else {
         dissect {
@@ -182,6 +183,7 @@ filter {
 
         date {
             match => [ "[@elb][timestamp]", "ISO8601"]
+            remove_field => [ "[@elb][timestamp]" ]
         }
     }
 

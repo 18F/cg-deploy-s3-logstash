@@ -40,7 +40,7 @@ set, all S3 settings will be ignored, and logstash will only read from a file (u
 
 There is none. Sorry/you're welcome. 
 
-Currently, this only expects to read ALB logs, and will parse the fillowing fields:
+Currently, this only expects to read ALB and ELB logs, and will parse the following fields for ALB logs:
 
 `@alb.actions_executed`
 `@alb.alb.id`
@@ -56,7 +56,9 @@ Currently, this only expects to read ALB logs, and will parse the fillowing fiel
 `@alb.redirect_url` \*
 `@alb.request.creation_time`
 `@alb.request.processing_time`
-`@alb.request.request`
+`@alb.request.protocol`
+`@alb.request.url`
+`@alb.request.verb`
 `@alb.response.processing_time`
 `@alb.ssl_cipher` \*
 `@alb.ssl_protocol` \*
@@ -69,6 +71,38 @@ Currently, this only expects to read ALB logs, and will parse the fillowing fiel
 `@alb.trace_id`
 `@alb.type`
 `@alb.user_agent`
+
+And the following fields for ELB logs:
+`@elb.timestamp`
+`@elb.elb.id`
+`@elb.client.ip`
+`@elb.client.port`
+`@elb.target.ip`
+`@elb.target.port`
+`@elb.request.processing_time`
+`@elb.target.processing_time`
+`@elb.response.processing_time`
+`@elb.elb.status_code`
+`@elb.target.status_code`
+`@elb.received_bytes`
+`@elb.sent_bytes`
+`@elb.request.verb`
+`@elb.request.url`
+`@elb.request.protocol`
+`@elb.request.user_agent`
+`@elb.ssl.cipher`
+`@elb.ssl.protocol`
+
+Both will have:
+`@message`
+`@input`
+`@shipper.name`
+`@level`
+`@timestamp`
+`host`
+`@raw`
+`@version`
+`tags`
 
 \* does not exist if it does not apply
 
