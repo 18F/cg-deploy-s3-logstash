@@ -3,6 +3,8 @@
 
 # Eclipse files
 .project
+.vscode
+.idea
 
 # Temporary directory
 tmp/
