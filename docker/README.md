@@ -67,31 +67,29 @@ Currently, this only expects to read ALB and ELB logs, and will parse the follow
 `@alb.target.port` \*
 `@alb.target.processing_time`
 `@alb.target.status_code`
-`@alb.timestamp`
 `@alb.trace_id`
 `@alb.type`
 `@alb.user_agent`
 
 And the following fields for ELB logs:
-`@elb.timestamp`
-`@elb.elb.id`
 `@elb.client.ip`
 `@elb.client.port`
-`@elb.target.ip`
-`@elb.target.port`
-`@elb.request.processing_time`
-`@elb.target.processing_time`
-`@elb.response.processing_time`
+`@elb.elb.id`
 `@elb.elb.status_code`
-`@elb.target.status_code`
 `@elb.received_bytes`
-`@elb.sent_bytes`
-`@elb.request.verb`
-`@elb.request.url`
+`@elb.request.processing_time`
 `@elb.request.protocol`
+`@elb.request.url`
 `@elb.request.user_agent`
+`@elb.request.verb`
+`@elb.response.processing_time`
+`@elb.sent_bytes`
 `@elb.ssl.cipher`
 `@elb.ssl.protocol`
+`@elb.target.ip`
+`@elb.target.port`
+`@elb.target.processing_time`
+`@elb.target.status_code`
 
 Both will have:
 `@message`
