@@ -101,6 +101,7 @@ filter {
                         "alb_ssl_cipher" => "[@alb][ssl_cipher]"
                         "alb_ssl_protocol" => "[@alb][ssl_protocol]"
             }
+            add_field => { "@message" => "%{[@alb][request][request]}" }
         }
 
         dissect {
@@ -155,6 +156,7 @@ filter {
                         "elb_ssl_protocol" => "[@elb][ssl_protocol]"
             }
             remove_tag => [ "_dissectfailure" ]
+            add_field => { "@message" => "%{[@elb][request][verb]} %{[@elb][request][url]} %{[@elb][request][protocol]}" }
         }
 
         dissect {
@@ -180,6 +182,15 @@ filter {
 
         date {
             match => [ "[@elb][timestamp]", "ISO8601"]
+        }
+    }
+
+    mutate {
+        rename => {"message" => "@raw"}
+        add_field => {
+            "@input" => "s3"
+            "@shipper.name" => "s3_logstash"
+            "@level" => "INFO"
         }
     }
 }
