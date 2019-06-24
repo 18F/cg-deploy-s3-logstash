@@ -1,48 +1,26 @@
 ---
 jobs:
-  - name: pull-status-check
-    plan:
-      - get: pull-request
-        version: every
-        trigger: true
-      - put: pull-request
-        params:
-          path: pull-request
-          status: pending
-      - task: validate-terraform
-        config:
-          platform: linux
-          image_resource:
-            type: docker-image
-            source:
-              repository: 18fgsa/concourse-task
-          inputs:
-            - name: pull-request
-          run:
-            path: pull-request/test/test-image.sh
-        on_success:
-          put: pull-request
-          params:
-            path: pull-request
-            status: success
-        on_failure:
-          put: pull-request
-          params:
-            path: pull-request
-            status: failure
-
   - name: update-logstash-image
     serial: true
     plan:
       - get: logstash-image-src
         trigger: true
+      - get: version
+        params:
+          bump: minor
       - put: docker-image-repo
         params:
           build: logstash-image-src/docker
-  
+          tag_file: version/version
+          tag_as_latest: true
+          tag_prefix: v
+      - put: version
+        params:
+          file: version/version
+
   - name: deploy-development
     plan:
-      - get: logstash-image-src
+      - get: update-logstash-image
         passed: [update-logstash-image]
         trigger: true
       - put: cloud-gov-development
@@ -55,6 +33,8 @@ jobs:
             S3_BUCKET: {{dev-alb-logs-bucket}}
             ELASTICSEARCH_INDEX: {{dev-alb-logs-elasticsearch-index}}
             ELASTICSEARCH_HOSTS: {{dev-elasticsearch-hosts}}
+          vars:
+            tag: docker-image-repo/tag
       on_failure:
         put: slack
         params:
@@ -76,7 +56,7 @@ jobs:
 
   - name: deploy-staging
     plan:
-      - get: logstash-image-src
+      - get: update-logstash-image
         passed: [deploy-development]
         trigger: true
       - put: cloud-gov-staging
@@ -90,6 +70,8 @@ jobs:
             S3_PREFIX: staging
             ELASTICSEARCH_INDEX: {{staging-alb-logs-elasticsearch-index}}
             ELASTICSEARCH_HOSTS: {{staging-elasticsearch-hosts}}
+          vars:
+            tag: docker-image-repo/tag
       on_failure:
         put: slack
         params:
@@ -111,7 +93,7 @@ jobs:
 
   - name: deploy-production
     plan:
-      - get: logstash-image-src
+      - get: update-logstash-image
         passed: [deploy-staging]
         trigger: true
       - put: cloud-gov-production
@@ -125,6 +107,8 @@ jobs:
             S3_PREFIX: production
             ELASTICSEARCH_INDEX: {{production-alb-logs-elasticsearch-index}}
             ELASTICSEARCH_HOSTS: {{production-elasticsearch-hosts}}
+          vars:
+            tag: docker-image-repo/tag
       on_failure:
         put: slack
         params:
@@ -189,16 +173,17 @@ resources:
       space: {{cf-space}}
       skip_cert_check: false
 
-  - name: pull-request
-    type: pull-request
+  - name: semver-master-version
+    type: semver-iam
     source:
-      repo: ((cg_provision_git_repo))
-      access_token: ((status_access_token))
-      disable_forks: true
-      every: true
+      driver: s3
+      bucket: {{semver-bucket}}
+      key: {{semver-key}}
+      region_name: {{aws-region}}
+      initial_version: 0.1.0
 
 resource_types:
-- name: pull-request
-  type: docker-image
-  source:
-    repository: jtarchie/pr
+  - name: semver-iam
+    type: docker-image
+    source:
+      repository: governmentpaas/semver-resource
