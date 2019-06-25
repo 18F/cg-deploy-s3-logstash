@@ -3,5 +3,5 @@ applications:
   - name: s3-logstash-ingestor
     instances: 1
     docker:
-      image: 18fgsa/s3-logstash-ingestor:((docker_tag))
+      image: 18fgsa/s3-logstash:((docker_tag))
     no-route: true
