@@ -4,6 +4,9 @@ import shutil
 import subprocess
 import time
 
+import socket
+from contextlib import closing
+
 import pytest
 
 
@@ -98,3 +101,59 @@ def test_log_parsing(log_file, image):
         assert l1 == l2
     for counter, _ in enumerate(l1):
         assert l1[counter] == l2[counter]
+
+
+def test_correct_ports_exposed(image):
+    port_map = subprocess.check_output(
+        [
+            "docker",
+            "inspect",
+            "--format",
+            "{{json .Config.ExposedPorts}}",
+            image
+            ]
+    )
+    port_map = port_map.decode().strip()
+    ports = json.loads(port_map)
+    assert ports == {"9600/tcp":{}}
+
+
+def test_port_really_listens(image):
+    container = subprocess.check_output(
+        [
+            "docker",
+            "run",
+            "-d",
+            "-p", "127.0.0.1::9600",
+            "-e",
+            f"LOGSTASH_READ_FROM_FILE=/dev/random",
+            "-e",
+            f"LOGSTASH_OUT_FILE=/dev/null",
+            image,
+        ]
+    )
+    container = container.decode().strip()
+    ip_port = subprocess.check_output([
+        "docker",
+        "port",
+        container,
+        "9600"
+    ])
+    ip_port = ip_port.decode().strip()
+
+    host, port = ip_port.split(":")
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+        sock.settimeout(60)
+        assert sock.connect_ex((host, int(port))) == 0
+    subprocess.check_call([
+        "docker",
+        "stop",
+        container
+    ])
+    subprocess.check_call([
+        "docker",
+        "rm",
+        container
+    ]
+
+    )
