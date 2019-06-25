@@ -105,17 +105,11 @@ def test_log_parsing(log_file, image):
 
 def test_correct_ports_exposed(image):
     port_map = subprocess.check_output(
-        [
-            "docker",
-            "inspect",
-            "--format",
-            "{{json .Config.ExposedPorts}}",
-            image
-            ]
+        ["docker", "inspect", "--format", "{{json .Config.ExposedPorts}}", image]
     )
     port_map = port_map.decode().strip()
     ports = json.loads(port_map)
-    assert ports == {"9600/tcp":{}}
+    assert ports == {"9600/tcp": {}}
 
 
 def test_port_really_listens(image):
@@ -124,7 +118,8 @@ def test_port_really_listens(image):
             "docker",
             "run",
             "-d",
-            "-p", "127.0.0.1::9600",
+            "-p",
+            "127.0.0.1::9600",
             "-e",
             f"LOGSTASH_READ_FROM_FILE=/dev/random",
             "-e",
@@ -133,27 +128,12 @@ def test_port_really_listens(image):
         ]
     )
     container = container.decode().strip()
-    ip_port = subprocess.check_output([
-        "docker",
-        "port",
-        container,
-        "9600"
-    ])
+    ip_port = subprocess.check_output(["docker", "port", container, "9600"])
     ip_port = ip_port.decode().strip()
 
     host, port = ip_port.split(":")
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
         sock.settimeout(60)
         assert sock.connect_ex((host, int(port))) == 0
-    subprocess.check_call([
-        "docker",
-        "stop",
-        container
-    ])
-    subprocess.check_call([
-        "docker",
-        "rm",
-        container
-    ]
-
-    )
+    subprocess.check_call(["docker", "stop", container])
+    subprocess.check_call(["docker", "rm", container])
