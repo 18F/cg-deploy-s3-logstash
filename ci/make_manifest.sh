@@ -1,6 +1,6 @@
 #!/bin/bash -ex
 mkdir -p generated-manifest
-echo <<EOF
+echo <<EOF > ../generated-manifest/manifest.yml
 ---
 applications:
   - name: s3-logstash-ingestor
@@ -11,4 +11,4 @@ applications:
     memory: 1G
     timeout: 18
 
-EOF > ../generated-manifest/manifest.yml
+EOF
