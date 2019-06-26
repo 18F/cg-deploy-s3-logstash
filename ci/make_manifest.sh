@@ -1,5 +1,5 @@
 #!/bin/bash -ex
-echo <<EOF > generated-manifest/manifest.yml
+cat <<EOF > generated-manifest/manifest.yml
 ---
 applications:
   - name: s3-logstash-ingestor
