@@ -8,6 +8,6 @@ applications:
       image: 18fgsa/s3-logstash:`cat $1`
     no-route: true
     memory: 1G
-    timeout: 18
+    timeout: 180
 
 EOF
