@@ -5,3 +5,5 @@ applications:
     docker:
       image: 18fgsa/s3-logstash:((docker_tag))
     no-route: true
+    memory: 1G
+    timeout: 180
