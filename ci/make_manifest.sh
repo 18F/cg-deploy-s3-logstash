@@ -11,4 +11,4 @@ applications:
     memory: 1G
     timeout: 18
 
-EOF > generated-manifest/manifest.yml
+EOF > ../generated-manifest/manifest.yml
